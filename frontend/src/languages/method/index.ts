@@ -2,7 +2,7 @@
 import zhCN from 'vxe-table/lib/locale/lang/zh-CN'
 import enUS from 'vxe-table/lib/locale/lang/en-US'
 import zhTW from 'vxe-table/lib/locale/lang/zh-TW'
-import ptBR from 'vxe-table/lib/locale/lang/pt-BR'
+//import ptBR from 'vxe-table/lib/locale/lang/pt-BR'
 import { store } from '@/store'
 import i18n from '../i18n'
 
@@ -38,7 +38,7 @@ export function getLangPackage(lang: string) {
       result.zh_TW = { ...tw, ...zhTW }
       break
     case 'pt_BR':
-      result.pt_BR = { ...pt, ...ptBR }
+      result.pt_BR = { ...pt }
       break
     case 'en_US':
     default:
