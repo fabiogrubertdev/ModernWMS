@@ -1,8 +1,16 @@
 <template>
   <div style="height: 100%">
-    <div class="homeSidebar">
+    <div
+      class="homeSidebar"
+      :style="{ width: sideBarWidth + 'px' }"
+    >
       <div class="sideBarTitle">
-        <Logo :height="50" :top="15" :left="5" />
+        <div v-if="!isSideBarCollapsed">
+          <Logo :height="50" :top="15" :left="5" />
+        </div>
+        <div v-else>
+          <LogoMini :height="40" :top="15" :left="10" />
+        </div>
       </div>
       <div class="sideBarMenus">
         <div v-for="(item, index) in data.menuList" :key="index">
@@ -15,13 +23,14 @@
                   :color="currentRouterPath === item.routerPath ? '#fff' : '#524e59'"
                 ></v-icon>
               </div>
-              <div class="menuLabel">{{ item.lable }}</div>
+              <div v-if="!isSideBarCollapsed" class="menuLabel">
+                {{ item.lable }}
+              </div>
             </div>
             <div v-if="item.children && item.children.length > 0" :class="item.showDetail && 'rotate90'">
               <v-icon icon="mdi-chevron-right" color="#524e59" :size="22"></v-icon>
             </div>
           </div>
-          <!-- <Transition name="menu"> -->
           <v-expand-transition>
             <div v-show="item.showDetail">
               <div
@@ -39,13 +48,15 @@
                       :color="currentRouterPath === detailItem.routerPath ? '#fff' : '#524e59'"
                     ></v-icon>
                   </div>
-                  <div class="menuLabel">{{ detailItem.lable }}</div>
+                  <div v-if="!isSideBarCollapsed" class="menuLabel">
+                    {{ detailItem.lable }}
+                  </div>
                 </div>
               </div>
             </div>
           </v-expand-transition>
-          <!-- </Transition> -->
         </div>
+        <!-- Removido o collapseBtn -->
       </div>
     </div>
   </div>
@@ -54,34 +65,29 @@
 <script lang="ts" setup>
 import { reactive, onMounted, computed } from 'vue'
 import Logo from '@/components/system/logo.vue'
+import LogoMini from '@/components/system/logo-mini.vue'
 import { SideBarMenu, SideBarDataProps } from '@/types/Home/Home'
 import { menusToSideBar } from '@/utils/router'
 import { store } from '@/store'
 import { router } from '@/router'
+
+const emit = defineEmits(['menu-clicked'])
 
 const data: SideBarDataProps = reactive({
   menuList: []
 })
 
 const method = reactive({
-  // Open menu
   openMenu: (item: SideBarMenu) => {
     if (item.children && item.children.length > 0) {
       item.showDetail = !item.showDetail
     } else if (item.routerPath && currentRouterPath.value !== item.routerPath) {
-      // If the selected menu is skipped, no action will be taken
       store.commit('system/setCurrentRouterPath', item.routerPath)
       store.commit('system/addOpenedMenu', item.routerPath)
       router.push(item.routerPath)
+      emit('menu-clicked')
     }
-    // if (menuName === 'login') {
-    //   store.commit('system/clearOpenedMenu', menuName)
-    // } else {
-    //   store.commit('system/addOpenedMenu', menuName)
-    // }
-    // router.push(menuName)
   },
-  // Get item class
   getItemClass: (item: SideBarMenu) => {
     if (item.children && item.children.length > 0 && item.showDetail) {
       return 'openedMenuItems'
@@ -93,8 +99,9 @@ const method = reactive({
   }
 })
 
-// Currently selected menu
 const currentRouterPath = computed(() => store.getters['system/currentRouterPath'])
+const sideBarWidth = computed(() => store.getters['system/sideBarWidth'])
+const isSideBarCollapsed = computed(() => store.getters['system/isSideBarCollapsed'])
 
 onMounted(() => {
   data.menuList = menusToSideBar()
@@ -106,9 +113,9 @@ onMounted(() => {
 @sideBarWidth: 300px;
 @sideBarTitleHeight: 70px;
 .homeSidebar {
-  width: @sideBarWidth;
   box-shadow: 5px 5px 5px #dbdce2;
   height: 100%;
+  position: relative;
   .sideBarTitle {
     height: @sideBarTitleHeight;
     position: relative;
@@ -117,7 +124,6 @@ onMounted(() => {
     height: calc(100% - @sideBarTitleHeight);
     overflow: auto;
     .menuItems {
-      // height: 42px;
       width: calc(100% - 20px);
       box-sizing: border-box;
       padding: 10px 0;
